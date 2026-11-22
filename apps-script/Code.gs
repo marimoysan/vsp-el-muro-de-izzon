@@ -21,8 +21,12 @@ function doPost(e) {
     var props = PropertiesService.getScriptProperties();
     var body = JSON.parse(e.postData.contents);
 
-    if (!body.secret || body.secret !== props.getProperty("SECRET")) {
-      return json({ ok: false, error: "unauthorized" });
+    var expected = props.getProperty("SECRET");
+    if (!body.secret || body.secret !== expected) {
+      // Solo longitudes (nunca los valores) para diagnosticar desajustes.
+      var got = body.secret ? String(body.secret).length : 0;
+      var want = expected === null ? "sin propiedad SECRET" : expected.length;
+      return json({ ok: false, error: "unauthorized (recibida: " + got + " car., esperada: " + want + ")" });
     }
 
     if (body.action === "photo") return json(savePhoto(body, props));
