@@ -1,0 +1,17 @@
+.pill {
+  display: inline-block;
+  background: var(--color-beige);
+  color: var(--color-on-beige);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.pill:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

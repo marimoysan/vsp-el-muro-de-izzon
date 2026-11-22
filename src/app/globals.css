@@ -1,0 +1,37 @@
+/* Tokens de marca Evoluzzión / IZZON Lab (ver raw-assets/LANDING_PAGE.jpg) */
+:root {
+  --color-bg: #000000;
+  --color-surface: #2b2b2b; /* fondo del textarea */
+  --color-text: #ffffff;
+  --color-beige: #c6c3b7; /* botones y logo IZZON */
+  --color-on-beige: #1a1a1a;
+  --radius-pill: 10px;
+  --radius-box: 4px;
+  --page-max-width: 420px;
+  --gutter: 24px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
