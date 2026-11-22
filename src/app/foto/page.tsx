@@ -1,14 +1,14 @@
 import { Screen } from "@/components/Screen";
+import { PhotoUploader } from "./PhotoUploader";
 
 /**
- * Flujo "Sube tu foto". Pendiente de implementar:
- *  1. ¿Qué equipo sois? → selector de icono (pantallas 3-5 del diseño)
- *  2. Elegir/hacer foto → compressImage() → POST /api/photo
+ * Flujo "Sube tu foto": elegir foto de la galería → compressImage() → POST /api/photo.
+ * Versión de prueba sin selección de equipo.
  */
 export default function FotoPage() {
   return (
     <Screen compact>
-      <p>Subida de foto — en construcción</p>
+      <PhotoUploader />
     </Screen>
   );
 }

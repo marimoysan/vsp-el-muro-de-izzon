@@ -1,19 +1,14 @@
 import { uploadPhotoToDrive } from "@/lib/google";
-import { isTeamId } from "@/lib/teams";
 
 export const maxDuration = 30;
 
 const MAX_BYTES = 4 * 1024 * 1024; // por debajo del límite de 4,5 MB de Vercel
 
-/** POST multipart/form-data: { team: TeamId, photo: File } */
+/** POST multipart/form-data: { photo: File } */
 export async function POST(request: Request) {
   const form = await request.formData();
-  const team = form.get("team");
   const photo = form.get("photo");
 
-  if (!isTeamId(team)) {
-    return Response.json({ error: "Equipo no válido" }, { status: 400 });
-  }
   if (!(photo instanceof File) || !photo.type.startsWith("image/")) {
     return Response.json({ error: "Falta la foto" }, { status: 400 });
   }
@@ -26,7 +21,7 @@ export async function POST(request: Request) {
 
   try {
     await uploadPhotoToDrive({
-      fileName: `${team}_${stamp}.${ext}`,
+      fileName: `foto_${stamp}.${ext}`,
       mimeType: photo.type,
       data: Buffer.from(await photo.arrayBuffer()),
     });

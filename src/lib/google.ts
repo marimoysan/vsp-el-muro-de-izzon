@@ -1,16 +1,11 @@
 import "server-only";
 
-import { Readable } from "node:stream";
-import { google } from "googleapis";
-
 /**
- * Cliente de Google (Drive + Sheets) autenticado con una service account.
- * Solo se usa en el servidor: las credenciales nunca llegan al navegador.
+ * Acceso a Google Drive y Sheets a través de la aplicación web de Apps Script
+ * (código en apps-script/Code.gs). El script se ejecuta con la cuenta de
+ * Google de la organizadora, así que usa su Drive y sus permisos.
  *
- * IMPORTANTE (Drive): una service account no tiene cuota de almacenamiento
- * propia. La carpeta de destino debe estar en una Unidad compartida (Shared
- * Drive) donde la service account sea "Gestor de contenido", o la subida
- * fallará con "Service Accounts do not have storage quota".
+ * Solo se usa en el servidor: la URL y el secreto nunca llegan al navegador.
  */
 
 function requireEnv(name: string): string {
@@ -19,16 +14,28 @@ function requireEnv(name: string): string {
   return value;
 }
 
-function getAuth() {
-  return new google.auth.JWT({
-    email: requireEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL"),
-    // En Vercel la clave se guarda con "\n" literales; los convertimos.
-    key: requireEnv("GOOGLE_PRIVATE_KEY").replace(/\\n/g, "\n"),
-    scopes: [
-      "https://www.googleapis.com/auth/drive.file",
-      "https://www.googleapis.com/auth/spreadsheets",
-    ],
+async function callAppsScript(payload: Record<string, unknown>) {
+  const res = await fetch(requireEnv("APPS_SCRIPT_URL"), {
+    method: "POST",
+    // text/plain: Apps Script lo lee igual en e.postData.contents.
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ ...payload, secret: requireEnv("APPS_SCRIPT_SECRET") }),
+    // Apps Script responde con una redirección a googleusercontent.com.
+    redirect: "follow",
+    cache: "no-store",
   });
+
+  const text = await res.text();
+  let data: { ok?: boolean; error?: string };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    // Suele significar que el despliegue no es público o la URL es incorrecta
+    // (Google devuelve una página HTML de login o de error).
+    throw new Error(`Respuesta no JSON de Apps Script (HTTP ${res.status})`);
+  }
+  if (!data.ok) throw new Error(`Apps Script: ${data.error ?? "error desconocido"}`);
+  return data;
 }
 
 export async function uploadPhotoToDrive(params: {
@@ -36,30 +43,14 @@ export async function uploadPhotoToDrive(params: {
   mimeType: string;
   data: Buffer;
 }) {
-  const drive = google.drive({ version: "v3", auth: getAuth() });
-  const res = await drive.files.create({
-    requestBody: {
-      name: params.fileName,
-      parents: [requireEnv("GOOGLE_DRIVE_FOLDER_ID")],
-    },
-    media: { mimeType: params.mimeType, body: Readable.from(params.data) },
-    fields: "id, name",
-    supportsAllDrives: true,
+  return callAppsScript({
+    action: "photo",
+    fileName: params.fileName,
+    mimeType: params.mimeType,
+    data: params.data.toString("base64"),
   });
-  return res.data;
 }
 
-export async function appendAnswerToSheet(params: {
-  team: string;
-  answer: string;
-}) {
-  const sheets = google.sheets({ version: "v4", auth: getAuth() });
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: requireEnv("GOOGLE_SHEET_ID"),
-    range: process.env.GOOGLE_SHEET_RANGE || "Respuestas!A:B",
-    // RAW evita que una respuesta que empiece por "=" se interprete como fórmula.
-    valueInputOption: "RAW",
-    insertDataOption: "INSERT_ROWS",
-    requestBody: { values: [[params.team, params.answer]] },
-  });
+export async function appendAnswerToSheet(params: { team: string; answer: string }) {
+  return callAppsScript({ action: "answer", team: params.team, answer: params.answer });
 }

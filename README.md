@@ -7,7 +7,7 @@ Web móvil para la dinámica de team building del **Annual Meeting 2026 de IZZON
 
 ## Stack
 
-Next.js (App Router, TypeScript) desplegado en Vercel. Las llamadas a Google se hacen desde rutas API del servidor con una service account.
+Next.js (App Router, TypeScript) desplegado en Vercel. Las rutas API del servidor llaman a una aplicación web de Google Apps Script ([apps-script/Code.gs](apps-script/Code.gs)), que guarda las fotos en Drive y las respuestas en Sheets con la cuenta de Google de la organizadora.
 
 ## Puesta en marcha
 
@@ -15,14 +15,19 @@ Next.js (App Router, TypeScript) desplegado en Vercel. Las llamadas a Google se 
 npm install
 cp .env.example .env.local   # rellena las variables
 npm run dev                  # http://localhost:3000
+npm run test:e2e             # sube una foto y una respuesta de prueba
 ```
 
-## Configuración de Google
+## Configuración de Google (Apps Script)
 
-1. En Google Cloud, crea un proyecto, habilita **Google Drive API** y **Google Sheets API** y crea una **service account** con una clave JSON.
-2. **Drive:** crea la carpeta de fotos dentro de una **Unidad compartida** y añade el email de la service account como *Gestor de contenido*. (Una service account no tiene cuota propia: en "Mi unidad" la subida falla.)
-3. **Sheets:** crea la hoja con una pestaña `Respuestas` y cabeceras `Equipo | Respuesta`, y compártela con la service account como *Editor*.
-4. Copia el email, la clave privada y los IDs de carpeta y hoja a `.env.local` (y a Vercel).
+1. **Drive:** crea una carpeta para las fotos y copia su ID (lo que va después de `/folders/` en la URL).
+2. **Sheets:** crea una hoja con una pestaña `Respuestas` y cabeceras `Equipo | Respuesta` en la fila 1. Copia su ID (entre `/d/` y `/edit` en la URL).
+3. **Script:** en [script.google.com](https://script.google.com) crea un proyecto nuevo y pega el contenido de `apps-script/Code.gs` en `Código.gs`.
+4. **Propiedades:** en *Configuración del proyecto → Propiedades del script* añade `SECRET` (genera uno con `openssl rand -hex 32`), `FOLDER_ID`, `SHEET_ID` y `SHEET_NAME` (`Respuestas`).
+5. **Publicar:** *Implementar → Nueva implementación → Aplicación web*, con *Ejecutar como: Yo* y *Quién tiene acceso: Cualquier usuario*. Autoriza los permisos y copia la URL que termina en `/exec`.
+6. En `.env.local` (y en Vercel) pon `APPS_SCRIPT_URL` = esa URL y `APPS_SCRIPT_SECRET` = el mismo `SECRET`.
+
+Para cambiar el script después: *Implementar → Gestionar implementaciones → editar → Versión nueva*. Así se mantiene la misma URL.
 
 ## Despliegue
 

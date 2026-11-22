@@ -45,3 +45,6 @@ next-env.d.ts
 
 # plantilla de variables de entorno (sí se versiona)
 !.env.example
+
+# originales de diseño (solo en local)
+/raw-assets/

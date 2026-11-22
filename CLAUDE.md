@@ -15,13 +15,19 @@ Es una app de un solo evento: prioriza que sea sencilla, rápida en móvil y fia
 
 - **Next.js 16** (App Router, TypeScript, CSS Modules, sin Tailwind) desplegado en **Vercel** desde GitHub (push a `main` = producción).
 - Next 16 tiene cambios incompatibles con versiones anteriores (ver `AGENTS.md`): consulta `node_modules/next/dist/docs/` antes de usar APIs de Next. `cacheComponents` está activado en `next.config.ts`.
-- `googleapis` para Drive y Sheets, autenticado con una **service account** (solo en servidor).
+- Drive y Sheets vía una **aplicación web de Google Apps Script** (`apps-script/Code.gs`) que se ejecuta con la cuenta de Google de la organizadora. Las rutas API de Vercel la llaman desde el servidor con un secreto compartido. Sin Google Cloud, sin service account, sin `googleapis`.
+
+```
+Móvil → Vercel /api/photo | /api/answer → Apps Script (doPost) → Drive / Sheets
+```
 
 ```bash
 npm run dev     # desarrollo en localhost:3000
 npm run build   # build de producción (lo mismo que hace Vercel)
 npm run lint
 npx tsc --noEmit
+npm run test:e2e                                  # prueba real contra Drive/Sheets (local)
+npm run test:e2e -- https://<app>.vercel.app foto.jpg   # contra producción
 ```
 
 Comando de Claude `/check` ejecuta tipos + lint + build.
@@ -37,12 +43,14 @@ src/
     api/photo/route.ts    POST multipart {team, photo} → Drive
     api/answer/route.ts   POST JSON {team, answer} → Sheets
   components/Screen.tsx   Marco común: cabecera Evoluzzión + contenido + logo IZZON Lab
-  lib/google.ts           Cliente Drive/Sheets (server-only)
+  lib/google.ts           Llama a Apps Script para Drive/Sheets (server-only)
   lib/teams.ts            Lista de equipos/iconos, texto de la pregunta, límite de caracteres
   lib/image.ts            Compresión de fotos en el navegador antes de subir
+apps-script/Code.gs       Copia versionada del Apps Script (lo que se ejecuta es lo pegado en script.google.com)
+scripts/e2e.sh            Prueba end-to-end de las rutas API
 public/brand/             Logos (Evoluzzión Annual Meeting 2026, IZZON Lab)
 public/icons/             Iconografía: <icono>-<negro|blanco|beige>.png
-raw-assets/               Originales de diseño (.ai, .jpg, .svg). No se sirven; fuente de verdad visual
+raw-assets/               Originales de diseño (.ai, .jpg, .svg). Solo en local, NO se versiona (.gitignore)
 ```
 
 ## Diseño (fuente de verdad: `raw-assets/LANDING_PAGE.jpg`)
@@ -60,10 +68,11 @@ Tokens en `src/app/globals.css`: negro `#000`, beige `#c6c3b7` (botones tipo pí
 
 ## Reglas importantes
 
-- **Credenciales solo en servidor.** Nunca uses `NEXT_PUBLIC_` para variables de Google ni importes `lib/google.ts` desde un componente cliente (lleva `import "server-only"`). Las variables están en `.env.example`; los valores reales en `.env.local` (ignorado por git) y en Vercel.
-- **Drive + service account:** la carpeta destino debe estar en una **Unidad compartida** y las llamadas llevan `supportsAllDrives: true`. En "Mi unidad" falla por falta de cuota.
-- **Límite de 4,5 MB por petición en Vercel:** las fotos se comprimen en el cliente (`compressImage`) antes de enviarlas; la ruta rechaza >4 MB.
-- **Sheets:** usar `valueInputOption: "RAW"` para que las respuestas no se interpreten como fórmulas.
+- **Secretos solo en servidor.** `APPS_SCRIPT_URL` y `APPS_SCRIPT_SECRET` nunca con prefijo `NEXT_PUBLIC_`, y no importes `lib/google.ts` desde un componente cliente (lleva `import "server-only"`). Valores reales en `.env.local` (ignorado por git) y en Vercel. IDs de carpeta/hoja y el secreto viven en las *Propiedades del script*, no en el código.
+- **Apps Script:** responde siempre HTTP 200 con `{ok, error}`; `lib/google.ts` convierte `ok:false` en excepción. Si cambias `apps-script/Code.gs`, hay que pegarlo en script.google.com y publicar una **nueva versión del despliegue existente** (si se crea un despliegue nuevo, cambia la URL).
+- **Límite de 4,5 MB por petición en Vercel:** las fotos se comprimen en el cliente (`compressImage`: 3000 px, calidad adaptativa ≤3,8 MB, ~270 ppp para el A4) antes de enviarlas; la ruta rechaza >4 MB. Vercel → Apps Script va en base64 (+33 %), sin problema.
+- **Sheets:** `asText()` en el script antepone `'` a textos que empiezan por `= + - @` para que no se interpreten como fórmulas.
+- Las fotos se imprimen después en A4, una por equipo, en una plantilla con hueco panorámico (~2:1).
 - Validar siempre en servidor el equipo (`isTeamId`) y la longitud de la respuesta, no fiarse del cliente.
 - No guardar datos personales de los participantes: solo nombre de equipo, respuesta y foto.
 
@@ -71,5 +80,5 @@ Tokens en `src/app/globals.css`: negro `#000`, beige `#c6c3b7` (botones tipo pí
 
 - Lista definitiva de equipos: ¿son los 10 iconos, o 20 (10 iconos × negro/blanco)? ¿Qué nombre se escribe en la hoja?
 - Orden exacto del flujo (¿se elige equipo antes o después de la foto/respuesta?) y uso de la variante beige (¿estado seleccionado?).
-- La cabecera `public/brand/evoluzzion-annual-meeting-2026.svg` pesa ~3,7 MB y usa texto vivo en Montserrat, que no se renderiza con la fuente correcta dentro de `<img>`. Exportar una versión con el texto convertido a contornos y optimizada (o un PNG/WebP), o maquetar el texto en HTML.
+- Sustituir `public/brand/evoluzzion-annual-meeting-2026.svg` por la versión con texto convertido a contornos que entregará Marina (la actual pesa ~3,7 MB y usa texto vivo).
 - Pantallas de confirmación / error tras enviar.
