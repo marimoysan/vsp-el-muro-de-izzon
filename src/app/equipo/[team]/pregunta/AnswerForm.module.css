@@ -47,15 +47,6 @@
   color: var(--color-beige);
 }
 
-.back {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-beige);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 .error {
   color: #ff8a80;
   font-size: 0.85rem;

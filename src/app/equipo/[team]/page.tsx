@@ -17,7 +17,7 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
   const team = getTeam(id);
 
   return (
-    <Screen>
+    <Screen back="/equipo">
       <Link href="/equipo" className={styles.team} aria-label="Cambiar de equipo">
         <Image src={team.icon} alt="" width={56} height={56} className={styles.icon} />
         <span>{team.label}</span>

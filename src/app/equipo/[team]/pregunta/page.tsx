@@ -13,7 +13,7 @@ export default async function PreguntaPage({ params }: { params: Promise<{ team:
   if (!isTeamId(team)) notFound();
 
   return (
-    <Screen compact>
+    <Screen compact back={`/equipo/${team}`}>
       <AnswerForm team={team} />
     </Screen>
   );

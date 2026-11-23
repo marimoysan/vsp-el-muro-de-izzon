@@ -50,3 +50,9 @@
   /* El círculo negro no se distingue del fondo: un aro sutil lo marca. */
   box-shadow: 0 0 0 1px #333;
 }
+
+/* Equipo que ya envió foto y respuesta: en gris (sigue siendo pulsable). */
+.completed {
+  opacity: 0.35;
+  filter: grayscale(1);
+}

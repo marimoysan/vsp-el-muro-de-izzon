@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import pill from "@/components/PillButton.module.css";
 import { markDone } from "@/lib/progress";
@@ -67,12 +66,6 @@ export function AnswerForm({ team }: { team: TeamId }) {
       </button>
 
       {error && <p className={styles.error}>{error}</p>}
-
-      {!sending && (
-        <Link href={`/equipo/${team}`} className={styles.back}>
-          Volver
-        </Link>
-      )}
     </form>
   );
 }

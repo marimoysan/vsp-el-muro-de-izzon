@@ -13,7 +13,7 @@ export default async function FotoPage({ params }: { params: Promise<{ team: str
   if (!isTeamId(team)) notFound();
 
   return (
-    <Screen compact>
+    <Screen back={`/equipo/${team}`}>
       <PhotoUploader team={team} />
     </Screen>
   );

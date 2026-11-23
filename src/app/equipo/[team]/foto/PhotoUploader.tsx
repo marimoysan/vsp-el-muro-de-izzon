@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element -- vista previa de un blob local */
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import pill from "@/components/PillButton.module.css";
 import { compressImage } from "@/lib/image";
@@ -89,12 +88,6 @@ export function PhotoUploader({ team }: { team: TeamId }) {
       )}
 
       {status === "error" && <p className={styles.error}>{error}</p>}
-
-      {status !== "sending" && (
-        <Link href={`/equipo/${team}`} className={styles.back}>
-          Volver
-        </Link>
-      )}
     </div>
   );
 }

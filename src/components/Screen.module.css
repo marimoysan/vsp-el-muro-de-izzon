@@ -7,6 +7,7 @@
   flex-direction: column;
   /* La cabecera grande se sale por los lados: que no cree scroll horizontal. */
   overflow-x: clip;
+  position: relative;
 }
 
 .header img,
@@ -49,4 +50,18 @@
 .footer img {
   width: 60%;
   height: auto;
+}
+
+/* Flecha "atrás": zona táctil de 44 px en la esquina superior izquierda. */
+.back {
+  position: absolute;
+  top: 12px;
+  left: 8px;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-beige);
 }

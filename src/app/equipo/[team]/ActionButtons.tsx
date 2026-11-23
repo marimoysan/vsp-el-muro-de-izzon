@@ -10,6 +10,15 @@ export function ActionButtons({ team }: { team: TeamId }) {
   const photoDone = useDone(team, "foto");
   const answerDone = useDone(team, "pregunta");
 
+  if (photoDone && answerDone) {
+    return (
+      <div className={styles.completion}>
+        <p className={styles.completionTitle}>¡Completado!</p>
+        <p>Podéis seguir disfrutando del Coffee Break</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.actions}>
       <Link

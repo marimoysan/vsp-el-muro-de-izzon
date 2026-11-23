@@ -33,3 +33,20 @@
 .check {
   margin-right: 6px;
 }
+
+/* Foto y respuesta enviadas: mensaje final en lugar de los botones. */
+.completion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--color-beige);
+  font-size: 1.1rem;
+}
+
+.completionTitle {
+  font-size: 2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
