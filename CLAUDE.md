@@ -34,10 +34,10 @@ Comando de Claude `/check` ejecuta tipos + lint + build. Con `npm run dev` arran
 
 ## Estado actual (23-nov-2026)
 
-- ✅ Flujo con equipo: `/` "¿Qué equipo sois?" → `/equipo` (rejilla de 30 equipos: NEGRO, BLANCO, BEIGE) → `/equipo/<icono>-<color>` (acciones) → `/equipo/<id>/foto`. Las fotos se guardan como `<icono>-<color>_<timestamp>.jpg`.
+- ✅ Flujo con equipo: `/` "¿Qué equipo sois?" → `/equipo` (rejilla de 30 equipos: NEGRO, BLANCO, BEIGE) → `/equipo/<icono>-<color>` (acciones) → `/equipo/<id>/foto`. Las fotos se guardan con el nombre del equipo, p. ej. `Hoja Negro.jpg` (si un equipo sube otra, Drive admite dos archivos con el mismo nombre).
 - ✅ Acción completada: se recuerda en `localStorage` del móvil (`lib/progress.ts`) y el botón pasa a "✓ Foto enviada" (borde beige). Es por dispositivo.
 - ⏳ Despliegue en Vercel: repo en GitHub (`marimoysan/vsp-el-muro-de-izzon`), Marina está creando el proyecto en Vercel con `APPS_SCRIPT_URL` y `APPS_SCRIPT_SECRET`. Siguiente paso: probar desde el móvil.
-- ⏸️ Respuesta a la pregunta / Google Sheets: **aparcado a petición de Marina**. El botón "Responde a la pregunta" está inactivo; `/api/answer` existe pero no se usa ni se ha probado.
+- 🧪 Respuesta a la pregunta: `/equipo/<id>/pregunta` (50–250 caracteres, contador) → `/api/answer` → Sheets, fila `Equipo | Respuesta | Fecha y hora`. Pendiente de probar con la hoja real (requiere `SHEET_ID`/`SHEET_NAME` y nueva versión del Apps Script).
 
 ## Estructura
 
@@ -46,11 +46,12 @@ src/
   app/
     page.tsx              Entrada desde el QR: "¿Qué equipo sois?"
     equipo/page.tsx       Selector de equipo (30 iconos en 3 secciones de color)
-    equipo/[team]/page.tsx          Acciones del equipo: "Sube tu foto" / "Responde a la pregunta" (inactivo)
+    equipo/[team]/page.tsx          Acciones del equipo: "Sube tu foto" / "Responde a la pregunta"
+    equipo/[team]/pregunta/AnswerForm.tsx  Cliente: textarea con contador → POST /api/answer
     equipo/[team]/ActionButtons.tsx Cliente: marca como hechas las acciones completadas
     equipo/[team]/foto/PhotoUploader.tsx  Cliente: elegir de galería → vista previa → compressImage → POST /api/photo
     api/photo/route.ts    POST multipart {photo, team} → Drive
-    api/answer/route.ts   POST JSON {team, answer} → Sheets (sin usar todavía)
+    api/answer/route.ts   POST JSON {team, answer} → Sheets (valida equipo y 50–250 caracteres)
   components/Screen.tsx   Marco común: cabecera Evoluzzión + contenido + logo IZZON Lab
   lib/google.ts           Llama a Apps Script para Drive/Sheets (server-only)
   lib/teams.ts            30 equipos (10 iconos × negro/blanco/beige), texto de la pregunta, límite
@@ -72,7 +73,7 @@ raw-assets/               Originales de diseño (.ai, .jpg, .svg). Solo en local
 3. **¿Qué equipo sois?**: botón que abre el selector de equipo.
 4-5. **Selector de equipo**: rejilla de 3 columnas con iconos circulares (hoja, tubo, molécula, gota, matraz, frasco, engranaje, camión, cuentagotas, ZZ), en sección **NEGRO** y sección **BLANCO**, con scroll.
 
-Tokens en `src/app/globals.css`: negro `#000`, beige `#c6c3b7` (botones tipo píldora y logo IZZON), superficie `#2b2b2b`. Tipografía **Montserrat** (cargada con `next/font`). Textos de UI en **español**.
+Tokens en `src/app/globals.css`: fondo `#060606`, beige `#c6c3b7` (botones tipo píldora y logo IZZON), superficie `#2b2b2b`. Tipografía **Montserrat** (cargada con `next/font`). Textos de UI en **español**.
 
 `raw-assets/A2_QR.png` es el póster impreso con el QR que apunta a la URL de producción.
 

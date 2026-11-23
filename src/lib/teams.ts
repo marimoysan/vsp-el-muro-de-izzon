@@ -46,4 +46,5 @@ export function getTeam(id: TeamId): Team {
 }
 
 export const QUESTION = "¿Qué nos impulsa a seguir evolucionando juntos?";
+export const MIN_ANSWER_LENGTH = 50;
 export const MAX_ANSWER_LENGTH = 250;

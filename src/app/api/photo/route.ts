@@ -1,5 +1,5 @@
 import { uploadPhotoToDrive } from "@/lib/google";
-import { isTeamId } from "@/lib/teams";
+import { getTeam, isTeamId } from "@/lib/teams";
 
 export const maxDuration = 30;
 
@@ -22,12 +22,11 @@ export async function POST(request: Request) {
     return Response.json({ error: "La foto es demasiado grande" }, { status: 413 });
   }
 
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const ext = photo.type === "image/png" ? "png" : "jpg";
 
   try {
     await uploadPhotoToDrive({
-      fileName: `${team}_${stamp}.${ext}`,
+      fileName: `${getTeam(team).label}.${ext}`,
       mimeType: photo.type,
       data: Buffer.from(await photo.arrayBuffer()),
     });

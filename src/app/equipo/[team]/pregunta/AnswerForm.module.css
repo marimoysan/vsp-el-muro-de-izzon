@@ -1,0 +1,63 @@
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.question {
+  align-self: stretch;
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: none;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: none;
+  border-radius: var(--radius-box);
+  padding: 12px;
+  /* 16px evita que iOS haga zoom al escribir. */
+  font: inherit;
+  font-size: 16px;
+}
+
+.textarea::placeholder {
+  color: #bbb;
+}
+
+.textarea:focus {
+  outline: 1.5px solid var(--color-beige);
+}
+
+.counter {
+  align-self: flex-end;
+  margin-top: -8px;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.counterOk {
+  color: var(--color-beige);
+}
+
+.back {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-beige);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.error {
+  color: #ff8a80;
+  font-size: 0.85rem;
+  text-align: center;
+}

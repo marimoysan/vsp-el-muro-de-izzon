@@ -33,8 +33,3 @@
 .check {
   margin-right: 6px;
 }
-
-.inactive {
-  opacity: 0.4;
-  cursor: default;
-}

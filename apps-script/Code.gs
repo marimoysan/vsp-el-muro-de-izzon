@@ -49,13 +49,13 @@ function savePhoto(body, props) {
   return { ok: true, id: file.getId() };
 }
 
-/** { team, answer } → nueva fila "Equipo | Respuesta" */
+/** { team, answer } → nueva fila "Equipo | Respuesta | Fecha y hora" */
 function saveAnswer(body, props) {
   var sheet = SpreadsheetApp.openById(props.getProperty("SHEET_ID")).getSheetByName(
     props.getProperty("SHEET_NAME") || "Respuestas"
   );
   if (!sheet) return { ok: false, error: "sheet_not_found" };
-  sheet.appendRow([asText(body.team), asText(body.answer)]);
+  sheet.appendRow([asText(body.team), asText(body.answer), new Date()]);
   return { ok: true };
 }
 

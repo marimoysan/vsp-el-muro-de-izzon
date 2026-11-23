@@ -1,5 +1,5 @@
 import { appendAnswerToSheet } from "@/lib/google";
-import { MAX_ANSWER_LENGTH, getTeam, isTeamId } from "@/lib/teams";
+import { MAX_ANSWER_LENGTH, MIN_ANSWER_LENGTH, getTeam, isTeamId } from "@/lib/teams";
 
 /** POST JSON: { team: TeamId, answer: string } */
 export async function POST(request: Request) {
@@ -10,9 +10,9 @@ export async function POST(request: Request) {
   if (!isTeamId(team)) {
     return Response.json({ error: "Equipo no válido" }, { status: 400 });
   }
-  if (!answer || answer.length > MAX_ANSWER_LENGTH) {
+  if (answer.length < MIN_ANSWER_LENGTH || answer.length > MAX_ANSWER_LENGTH) {
     return Response.json(
-      { error: `La respuesta debe tener entre 1 y ${MAX_ANSWER_LENGTH} caracteres` },
+      { error: `La respuesta debe tener entre ${MIN_ANSWER_LENGTH} y ${MAX_ANSWER_LENGTH} caracteres` },
       { status: 400 },
     );
   }

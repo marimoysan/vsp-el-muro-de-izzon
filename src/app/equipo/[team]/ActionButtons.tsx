@@ -8,6 +8,7 @@ import styles from "./page.module.css";
 
 export function ActionButtons({ team }: { team: TeamId }) {
   const photoDone = useDone(team, "foto");
+  const answerDone = useDone(team, "pregunta");
 
   return (
     <div className={styles.actions}>
@@ -19,10 +20,13 @@ export function ActionButtons({ team }: { team: TeamId }) {
         {photoDone ? "Foto enviada" : "Sube tu foto"}
       </Link>
 
-      {/* Aparcado: se activará cuando completemos la parte de la pregunta. */}
-      <span className={`${pill.pill} ${styles.inactive}`} aria-disabled="true">
-        Responde a la pregunta
-      </span>
+      <Link
+        href={`/equipo/${team}/pregunta`}
+        className={answerDone ? `${pill.pill} ${styles.done}` : pill.pill}
+      >
+        {answerDone && <span className={styles.check}>✓</span>}
+        {answerDone ? "Respuesta enviada" : "Responde a la pregunta"}
+      </Link>
     </div>
   );
 }
