@@ -21,7 +21,7 @@ export async function compressImage(
     maxBytes = 4 * 1024 * 1024 - 16 * 1024,
   } = {},
 ): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
+  const bitmap = await openImage(file);
   const longSide = Math.max(bitmap.width, bitmap.height);
   let side = Math.min(longSide, maxSide);
 
@@ -63,14 +63,72 @@ export async function compressImage(
   }
 }
 
-function draw(bitmap: ImageBitmap, scale: number): HTMLCanvasElement {
+export const UNREADABLE_PHOTO_MESSAGE =
+  "No hemos podido leer la foto. Probad a elegirla otra vez o subidla desde el móvil de otro compañero/a.";
+
+type Decoded = { source: CanvasImageSource; width: number; height: number; close(): void };
+
+/**
+ * Abre la foto para poder dibujarla. En Android a veces falla de forma
+ * puntual ("The source image could not be decoded"): foto de Google Fotos aún
+ * descargándose, o poca memoria libre. Por eso se prueba en este orden:
+ *  1. createImageBitmap con el archivo tal cual.
+ *  2. Tras una pausa, otra vez, pero leyendo antes el archivo entero a memoria.
+ *  3. Con un <img> normal (otro descodificador del navegador).
+ * Si los tres fallan, se lanza un error con un mensaje para el equipo.
+ */
+async function openImage(file: File): Promise<Decoded> {
+  try {
+    return fromBitmap(await createImageBitmap(file));
+  } catch (err) {
+    console.warn("createImageBitmap falló, reintentando", err);
+  }
+
+  let copy: Blob;
+  try {
+    await new Promise((r) => setTimeout(r, 600));
+    copy = new Blob([await file.arrayBuffer()], { type: file.type });
+  } catch (err) {
+    console.warn("No se pudo leer el archivo", err);
+    throw new Error(UNREADABLE_PHOTO_MESSAGE);
+  }
+
+  try {
+    return fromBitmap(await createImageBitmap(copy));
+  } catch (err) {
+    console.warn("Reintento con createImageBitmap falló, probando con <img>", err);
+  }
+
+  const url = URL.createObjectURL(copy);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return {
+      source: img,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      close: () => URL.revokeObjectURL(url),
+    };
+  } catch (err) {
+    URL.revokeObjectURL(url);
+    console.warn("Tampoco se pudo abrir con <img>", err);
+    throw new Error(UNREADABLE_PHOTO_MESSAGE);
+  }
+}
+
+function fromBitmap(bitmap: ImageBitmap): Decoded {
+  return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+}
+
+function draw(bitmap: Decoded, scale: number): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   const ctx = canvas.getContext("2d")!;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap.source, 0, 0, canvas.width, canvas.height);
   return canvas;
 }
 
