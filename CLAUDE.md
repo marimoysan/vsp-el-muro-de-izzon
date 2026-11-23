@@ -34,10 +34,12 @@ Comando de Claude `/check` ejecuta tipos + lint + build. Con `npm run dev` arran
 
 ## Estado actual (23-nov-2026)
 
-- ✅ Flujo con equipo: `/` "¿Qué equipo sois?" → `/equipo` (rejilla de 30 equipos: NEGRO, BLANCO, BEIGE) → `/equipo/<icono>-<color>` (acciones) → `/equipo/<id>/foto`. Las fotos se guardan con el nombre del equipo, p. ej. `Hoja Negro.jpg` (si un equipo sube otra, Drive admite dos archivos con el mismo nombre).
-- ✅ Acción completada: se recuerda en `localStorage` del móvil (`lib/progress.ts`) y el botón pasa a "✓ Foto enviada" (borde beige). Es por dispositivo.
-- ⏳ Despliegue en Vercel: repo en GitHub (`marimoysan/vsp-el-muro-de-izzon`), Marina está creando el proyecto en Vercel con `APPS_SCRIPT_URL` y `APPS_SCRIPT_SECRET`. Siguiente paso: probar desde el móvil.
-- 🧪 Respuesta a la pregunta: `/equipo/<id>/pregunta` (50–250 caracteres, contador) → `/api/answer` → Sheets, fila `Equipo | Respuesta | Fecha y hora`. Pendiente de probar con la hoja real (requiere `SHEET_ID`/`SHEET_NAME` y nueva versión del Apps Script).
+- ✅ Desplegado en Vercel (`vsp-el-muro-de-izzon.vercel.app`, push a `main` = producción) y foto probada desde el móvil.
+- ✅ Flujo: `/` "¿Qué equipo sois?" → `/equipo` (30 equipos en NEGRO, BLANCO, BEIGE) → `/equipo/<icono>-<color>` (acciones) → `/equipo/<id>/foto` o `/equipo/<id>/pregunta`. Tras completar una acción vuelve a la pantalla del equipo.
+- ✅ Fotos: se guardan en Drive con el nombre del equipo, p. ej. `Hoja Negro.jpg` (si sube otra, Drive guarda dos con el mismo nombre). `compressImage` reintenta y usa `<img>` como alternativa si Android falla al descodificar ("The source image could not be decoded", visto en real); si todo falla, sugiere usar el móvil de otro compañero/a.
+- ✅ Acción completada: se recuerda en `localStorage` (`lib/progress.ts`) y el botón pasa a "✓ Foto enviada" / "✓ Respuesta enviada" (borde beige). Es por dispositivo. Reenviar crea otra fila / otra foto.
+- 🧪 Pregunta: 50–250 caracteres con contador → `/api/answer` → Sheets, fila `Equipo | Respuesta | Fecha y hora`. Pendiente de probar con la hoja real (requiere `SHEET_ID`/`SHEET_NAME` en Propiedades del script y nueva versión del Apps Script con la columna de fecha).
+- 🎨 Cabecera grande (`Screen` sin `compact`) al 160 % del ancho para que "EVOLUZZIÓN" ocupe ~3/4 de la pantalla como en el diseño (el SVG tiene mucho margen). Sin commitear todavía en el momento de escribir esto.
 
 ## Estructura
 
@@ -68,10 +70,12 @@ raw-assets/               Originales de diseño (.ai, .jpg, .svg). Solo en local
 
 5 pantallas móviles, todas con fondo negro, cabecera Evoluzzión arriba y logo IZZON Lab abajo:
 
-1. **Inicio**: cabecera grande + botones "SUBE TU FOTO" y "RESPONDE A LA PREGUNTA".
-2. **Pregunta**: cabecera compacta, pregunta en mayúsculas y textarea gris oscuro "Máx 250 caracteres."
-3. **¿Qué equipo sois?**: botón que abre el selector de equipo.
-4-5. **Selector de equipo**: rejilla de 3 columnas con iconos circulares (hoja, tubo, molécula, gota, matraz, frasco, engranaje, camión, cuentagotas, ZZ), en sección **NEGRO** y sección **BLANCO**, con scroll.
+Orden real del recorrido: 3 → 4-5 → 1 → (foto | 2).
+
+1. **Acciones del equipo** (`/equipo/<id>`): cabecera grande + "SUBE TU FOTO" y "RESPONDE A LA PREGUNTA". Añadido: icono y nombre del equipo arriba (enlace para cambiar de equipo).
+2. **Pregunta**: cabecera compacta, pregunta en mayúsculas y textarea gris oscuro. Añadido: contador, botón "Enviar" y "Volver".
+3. **¿Qué equipo sois?** (`/`, entrada desde el QR): botón que abre el selector.
+4-5. **Selector de equipo**: rejilla de 3 columnas con iconos circulares (hoja, tubo, molécula, gota, matraz, frasco, engranaje, camión, cuentagotas, ZZ) en secciones **NEGRO**, **BLANCO** y **BEIGE** (el diseño solo muestra dos; hay 30 equipos), con scroll. Los iconos negros llevan un aro gris sutil para distinguirse del fondo.
 
 Tokens en `src/app/globals.css`: fondo `#060606`, beige `#c6c3b7` (botones tipo píldora y logo IZZON), superficie `#2b2b2b`. Tipografía **Montserrat** (cargada con `next/font`). Textos de UI en **español**.
 
@@ -103,7 +107,7 @@ Tokens en `src/app/globals.css`: fondo `#060606`, beige `#c6c3b7` (botones tipo 
 ## Pendiente / por decidir
 
 - ¿Qué nombre de equipo se escribe en la hoja? Ahora sería "Hoja Negro", etc.
-- Sustituir `public/brand/evoluzzion-annual-meeting-2026.svg` por la versión con texto convertido a contornos que entregará Marina (la actual pesa ~3,7 MB y usa texto vivo).
-- Pantallas de confirmación / error definitivas (ahora hay un "¡Foto recibida!" y un texto de error básicos).
+- Sustituir `public/brand/evoluzzion-annual-meeting-2026.svg` por la versión que entregará Marina: **texto convertido a contornos y sin el logo IZZON LAB** (la actual pesa ~3,7 MB, sus textos pequeños salen en Times y el logo IZZON se ve duplicado con el del pie). Al cambiarla, revisar el 160 % / -30 % de `.header img` en `Screen.module.css`.
+- Probar la pregunta end-to-end en el móvil con la hoja real.
 - Avisar en la pantalla de subida de que la foto sea horizontal (la plantilla A4 tiene hueco ~2:1).
 - `.env.example` local tiene la URL real del script sin commitear: restaurar con `git checkout -- .env.example`.

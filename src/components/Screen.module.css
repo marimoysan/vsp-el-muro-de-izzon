@@ -5,6 +5,8 @@
   padding: 32px var(--gutter);
   display: flex;
   flex-direction: column;
+  /* La cabecera grande se sale por los lados: que no cree scroll horizontal. */
+  overflow-x: clip;
 }
 
 .header img,
@@ -12,6 +14,16 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+/*
+ * El SVG tiene mucho margen negro alrededor del texto. Al 160 % del ancho,
+ * "EVOLUZZIÓN" ocupa ~3/4 de la pantalla, como en LANDING_PAGE.jpg.
+ */
+.header img {
+  width: 160%;
+  max-width: none;
+  margin-left: -30%;
 }
 
 .headerCompact {
