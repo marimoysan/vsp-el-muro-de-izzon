@@ -66,7 +66,12 @@ export async function compressImage(
 export const UNREADABLE_PHOTO_MESSAGE =
   "No hemos podido leer la foto. Probad a elegirla otra vez o subidla desde el móvil de otro compañero/a.";
 
-type Decoded = { source: CanvasImageSource; width: number; height: number; close(): void };
+type Decoded = {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+  close(): void;
+};
 
 /**
  * Abre la foto para poder dibujarla. En Android a veces falla de forma
@@ -96,7 +101,10 @@ async function openImage(file: File): Promise<Decoded> {
   try {
     return fromBitmap(await createImageBitmap(copy));
   } catch (err) {
-    console.warn("Reintento con createImageBitmap falló, probando con <img>", err);
+    console.warn(
+      "Reintento con createImageBitmap falló, probando con <img>",
+      err,
+    );
   }
 
   const url = URL.createObjectURL(copy);
@@ -118,7 +126,12 @@ async function openImage(file: File): Promise<Decoded> {
 }
 
 function fromBitmap(bitmap: ImageBitmap): Decoded {
-  return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+  return {
+    source: bitmap,
+    width: bitmap.width,
+    height: bitmap.height,
+    close: () => bitmap.close(),
+  };
 }
 
 function draw(bitmap: Decoded, scale: number): HTMLCanvasElement {
@@ -135,7 +148,10 @@ function draw(bitmap: Decoded, scale: number): HTMLCanvasElement {
 function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("No se pudo procesar la imagen"))),
+      (blob) =>
+        blob
+          ? resolve(blob)
+          : reject(new Error("No se pudo procesar la imagen")),
       "image/jpeg",
       quality,
     ),

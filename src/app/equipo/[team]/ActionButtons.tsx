@@ -2,13 +2,33 @@
 
 import Link from "next/link";
 import pill from "@/components/PillButton.module.css";
+import { BackLink } from "@/components/Screen";
 import { useDone } from "@/lib/progress";
+import { useTeamStatus } from "@/lib/status";
 import type { TeamId } from "@/lib/teams";
 import styles from "./page.module.css";
 
+/**
+ * Acciones del equipo. Lo que está hecho sale de Drive (foto) y Sheets
+ * (respuesta); si no se puede consultar, se usa lo recordado en este móvil.
+ */
 export function ActionButtons({ team }: { team: TeamId }) {
-  const photoDone = useDone(team, "foto");
-  const answerDone = useDone(team, "pregunta");
+  const status = useTeamStatus();
+  const localPhoto = useDone(team, "foto");
+  const localAnswer = useDone(team, "pregunta");
+
+  if (status.state === "loading") {
+    return (
+      <>
+        <BackLink href="/equipo" />
+        <p className={styles.loading}>Cargando…</p>
+      </>
+    );
+  }
+
+  const photoDone = status.state === "ok" ? status.photo.has(team) : localPhoto;
+  const answerDone =
+    status.state === "ok" ? status.answer.has(team) : localAnswer;
 
   if (photoDone && answerDone) {
     return (
@@ -19,23 +39,27 @@ export function ActionButtons({ team }: { team: TeamId }) {
     );
   }
 
+  // Sin flecha atrás en la pantalla de completado.
   return (
-    <div className={styles.actions}>
-      <Link
-        href={`/equipo/${team}/foto`}
-        className={photoDone ? `${pill.pill} ${styles.done}` : pill.pill}
-      >
-        {photoDone && <span className={styles.check}>✓</span>}
-        {photoDone ? "Foto enviada" : "Sube tu foto"}
-      </Link>
+    <>
+      <BackLink href="/equipo" />
+      <div className={styles.actions}>
+        <Link
+          href={`/equipo/${team}/foto`}
+          className={photoDone ? `${pill.pill} ${styles.done}` : pill.pill}
+        >
+          {photoDone && <span className={styles.check}>✓</span>}
+          {photoDone ? "Foto enviada" : "Sube tu foto"}
+        </Link>
 
-      <Link
-        href={`/equipo/${team}/pregunta`}
-        className={answerDone ? `${pill.pill} ${styles.done}` : pill.pill}
-      >
-        {answerDone && <span className={styles.check}>✓</span>}
-        {answerDone ? "Respuesta enviada" : "Responde a la pregunta"}
-      </Link>
-    </div>
+        <Link
+          href={`/equipo/${team}/pregunta`}
+          className={answerDone ? `${pill.pill} ${styles.done}` : pill.pill}
+        >
+          {answerDone && <span className={styles.check}>✓</span>}
+          {answerDone ? "Respuesta enviada" : "Responde a la pregunta"}
+        </Link>
+      </div>
+    </>
   );
 }

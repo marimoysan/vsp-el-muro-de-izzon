@@ -31,6 +31,7 @@ function doPost(e) {
 
     if (body.action === "photo") return json(savePhoto(body, props));
     if (body.action === "answer") return json(saveAnswer(body, props));
+    if (body.action === "status") return json(getStatus(props));
     return json({ ok: false, error: "unknown_action" });
   } catch (err) {
     console.error(err);
@@ -57,6 +58,33 @@ function saveAnswer(body, props) {
   if (!sheet) return { ok: false, error: "sheet_not_found" };
   sheet.appendRow([asText(body.team), asText(body.answer), new Date()]);
   return { ok: true };
+}
+
+/**
+ * Qué hay ya guardado, para marcar equipos completados:
+ *   photos  nombres de las fotos de la carpeta, sin extensión ("Hoja Negro")
+ *   answers equipos (columna A) con respuesta no vacía (columna B)
+ */
+function getStatus(props) {
+  var photos = [];
+  var files = DriveApp.getFolderById(props.getProperty("FOLDER_ID")).getFiles();
+  while (files.hasNext()) {
+    var file = files.next();
+    if (!file.isTrashed()) photos.push(file.getName().replace(/\.[^.]+$/, ""));
+  }
+
+  var answers = [];
+  var sheet = SpreadsheetApp.openById(props.getProperty("SHEET_ID")).getSheetByName(
+    props.getProperty("SHEET_NAME") || "Respuestas"
+  );
+  if (!sheet) return { ok: false, error: "sheet_not_found" };
+  if (sheet.getLastRow() > 0) {
+    sheet.getRange(1, 1, sheet.getLastRow(), 2).getDisplayValues().forEach(function (row) {
+      if (row[0] && String(row[1]).trim()) answers.push(String(row[0]).trim());
+    });
+  }
+
+  return { ok: true, photos: photos, answers: answers };
 }
 
 /** Evita que un texto que empieza por = + - @ se interprete como fórmula. */

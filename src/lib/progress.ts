@@ -46,10 +46,3 @@ export function useDone(team: TeamId, action: Action) {
     () => false,
   );
 }
-
-/** El equipo ha enviado foto y respuesta desde este móvil. */
-export function useCompleted(team: TeamId) {
-  const photo = useDone(team, "foto");
-  const answer = useDone(team, "pregunta");
-  return photo && answer;
-}

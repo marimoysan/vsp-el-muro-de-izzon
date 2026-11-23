@@ -19,14 +19,17 @@ async function callAppsScript(payload: Record<string, unknown>) {
     method: "POST",
     // text/plain: Apps Script lo lee igual en e.postData.contents.
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ ...payload, secret: requireEnv("APPS_SCRIPT_SECRET") }),
+    body: JSON.stringify({
+      ...payload,
+      secret: requireEnv("APPS_SCRIPT_SECRET"),
+    }),
     // Apps Script responde con una redirección a googleusercontent.com.
     redirect: "follow",
     cache: "no-store",
   });
 
   const text = await res.text();
-  let data: { ok?: boolean; error?: string };
+  let data: { ok?: boolean; error?: string; [key: string]: unknown };
   try {
     data = JSON.parse(text);
   } catch {
@@ -34,7 +37,8 @@ async function callAppsScript(payload: Record<string, unknown>) {
     // (Google devuelve una página HTML de login o de error).
     throw new Error(`Respuesta no JSON de Apps Script (HTTP ${res.status})`);
   }
-  if (!data.ok) throw new Error(`Apps Script: ${data.error ?? "error desconocido"}`);
+  if (!data.ok)
+    throw new Error(`Apps Script: ${data.error ?? "error desconocido"}`);
   return data;
 }
 
@@ -51,6 +55,22 @@ export async function uploadPhotoToDrive(params: {
   });
 }
 
-export async function appendAnswerToSheet(params: { team: string; answer: string }) {
-  return callAppsScript({ action: "answer", team: params.team, answer: params.answer });
+export async function appendAnswerToSheet(params: {
+  team: string;
+  answer: string;
+}) {
+  return callAppsScript({
+    action: "answer",
+    team: params.team,
+    answer: params.answer,
+  });
+}
+
+/** Nombres de las fotos en Drive (sin extensión) y equipos con respuesta en Sheets. */
+export async function getSavedStatus() {
+  const data = await callAppsScript({ action: "status" });
+  return {
+    photos: (data.photos as string[] | undefined) ?? [],
+    answers: (data.answers as string[] | undefined) ?? [],
+  };
 }

@@ -2,13 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCompleted } from "@/lib/progress";
 import type { Team } from "@/lib/teams";
 import styles from "./page.module.css";
 
-/** Icono del selector; en gris si el equipo ya envió foto y respuesta. */
-export function TeamLink({ team }: { team: Team }) {
-  const completed = useCompleted(team.id);
+/** Icono del selector; en gris si el equipo ya tiene foto y respuesta guardadas. */
+export function TeamLink({
+  team,
+  completed,
+}: {
+  team: Team;
+  completed: boolean;
+}) {
   return (
     <Link
       href={`/equipo/${team.id}`}

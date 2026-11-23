@@ -19,20 +19,7 @@ export function Screen({
 }) {
   return (
     <main className={styles.screen}>
-      {back && (
-        <Link href={back} className={styles.back} aria-label="Atrás">
-          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-            <path
-              d="M15 5l-7 7 7 7"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </Link>
-      )}
+      {back && <BackLink href={back} />}
       <header className={compact ? styles.headerCompact : styles.header}>
         <img
           src="/brand/evoluzzion-annual-meeting-2026.svg"
@@ -44,5 +31,23 @@ export function Screen({
         <img src="/brand/izzon-lab.svg" alt="IZZON Lab" />
       </footer>
     </main>
+  );
+}
+
+/** Flecha "atrás" en la esquina superior izquierda de la pantalla. */
+export function BackLink({ href }: { href: string }) {
+  return (
+    <Link href={href} className={styles.back} aria-label="Atrás">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path
+          d="M15 5l-7 7 7 7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </Link>
   );
 }
