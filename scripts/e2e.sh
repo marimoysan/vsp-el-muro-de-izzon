@@ -9,5 +9,5 @@ BASE="${1:-http://localhost:3000}"
 PHOTO="${2:-public/icons/zz-negro.png}"
 
 echo "→ Subiendo $PHOTO a $BASE/api/photo"
-curl -sS -w "\n  HTTP %{http_code}\n" -X POST "$BASE/api/photo" -F "photo=@$PHOTO"
+curl -sS -w "\n  HTTP %{http_code}\n" -X POST "$BASE/api/photo" -F "photo=@$PHOTO" --form-string "team=zz-negro"
 echo "Si da HTTP 200 y {\"ok\":true}, la foto debería estar en la carpeta de Drive."

@@ -1,0 +1,52 @@
+.sections {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section + .section {
+  border-top: 1px solid #555;
+  padding-top: 20px;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+/* 3 columnas; la última fila (ZZ) queda centrada como en el diseño. */
+.grid {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 16px;
+}
+
+.grid li {
+  width: 33.333%;
+  display: flex;
+  justify-content: center;
+}
+
+.team {
+  display: block;
+  border-radius: 50%;
+  transition: transform 0.1s;
+}
+
+.team:active {
+  transform: scale(0.92);
+}
+
+.icon {
+  display: block;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  /* El círculo negro no se distingue del fondo: un aro sutil lo marca. */
+  box-shadow: 0 0 0 1px #333;
+}

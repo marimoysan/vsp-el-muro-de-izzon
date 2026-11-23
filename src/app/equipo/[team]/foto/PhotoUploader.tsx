@@ -3,13 +3,17 @@
 /* eslint-disable @next/next/no-img-element -- vista previa de un blob local */
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import pill from "@/components/PillButton.module.css";
 import { compressImage } from "@/lib/image";
+import { markDone } from "@/lib/progress";
+import type { TeamId } from "@/lib/teams";
 import styles from "./PhotoUploader.module.css";
 
-type Status = "idle" | "sending" | "done" | "error";
+type Status = "idle" | "sending" | "error";
 
-export function PhotoUploader() {
+export function PhotoUploader({ team }: { team: TeamId }) {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -39,25 +43,17 @@ export function PhotoUploader() {
       const blob = await compressImage(file);
       const form = new FormData();
       form.append("photo", blob, "foto.jpg");
+      form.append("team", team);
       const res = await fetch("/api/photo", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "No se pudo subir la foto");
-      setStatus("done");
+      // Vuelve a las acciones del equipo, donde "Sube tu foto" aparece como hecha.
+      markDone(team, "foto");
+      router.replace(`/equipo/${team}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo subir la foto");
       setStatus("error");
     }
-  }
-
-  if (status === "done") {
-    return (
-      <div className={styles.wrapper}>
-        <p className={styles.message}>¡Foto recibida! Gracias.</p>
-        <Link href="/" className={pill.pill}>
-          Volver
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -93,6 +89,12 @@ export function PhotoUploader() {
       )}
 
       {status === "error" && <p className={styles.error}>{error}</p>}
+
+      {status !== "sending" && (
+        <Link href={`/equipo/${team}`} className={styles.back}>
+          Volver
+        </Link>
+      )}
     </div>
   );
 }

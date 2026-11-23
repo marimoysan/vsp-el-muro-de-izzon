@@ -18,9 +18,13 @@
   background: var(--color-surface);
 }
 
-.message {
+.back {
+  font-size: 0.8rem;
   text-transform: uppercase;
-  text-align: center;
+  letter-spacing: 0.05em;
+  color: var(--color-beige);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .error {

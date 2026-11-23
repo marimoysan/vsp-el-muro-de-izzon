@@ -1,11 +1,9 @@
 /**
- * Equipos del evento. Cada equipo se identifica por un icono de la
- * iconografía de Evoluzzión (public/icons/<id>-<variante>.png).
- *
- * TODO: confirmar la lista definitiva de equipos y sus nombres visibles
- * (el diseño muestra 10 iconos en variante NEGRO y BLANCO).
+ * Equipos del evento: 30 = 10 iconos × 3 colores (negro, blanco, beige).
+ * Cada equipo se identifica como "<icono>-<color>", p. ej. "hoja-negro",
+ * que coincide con su imagen en public/icons/<icono>-<color>.png.
  */
-export const TEAMS = [
+export const ICONS = [
   { id: "hoja", label: "Hoja" },
   { id: "tubo", label: "Tubo" },
   { id: "molecula", label: "Molécula" },
@@ -18,19 +16,33 @@ export const TEAMS = [
   { id: "zz", label: "ZZ" },
 ] as const;
 
-export type TeamId = (typeof TEAMS)[number]["id"];
-export type IconVariant = "negro" | "blanco" | "beige";
+export const COLORS = [
+  { id: "negro", label: "Negro" },
+  { id: "blanco", label: "Blanco" },
+  { id: "beige", label: "Beige" },
+] as const;
 
-export function iconSrc(id: TeamId, variant: IconVariant) {
-  return `/icons/${id}-${variant}.png`;
-}
+type IconId = (typeof ICONS)[number]["id"];
+export type ColorId = (typeof COLORS)[number]["id"];
+export type TeamId = `${IconId}-${ColorId}`;
+
+export type Team = { id: TeamId; label: string; color: ColorId; icon: string };
+
+export const TEAMS: Team[] = COLORS.flatMap((c) =>
+  ICONS.map((i) => ({
+    id: `${i.id}-${c.id}` as TeamId,
+    label: `${i.label} ${c.label}`,
+    color: c.id,
+    icon: `/icons/${i.id}-${c.id}.png`,
+  })),
+);
 
 export function isTeamId(value: unknown): value is TeamId {
   return TEAMS.some((t) => t.id === value);
 }
 
-export function teamLabel(id: TeamId) {
-  return TEAMS.find((t) => t.id === id)!.label;
+export function getTeam(id: TeamId): Team {
+  return TEAMS.find((t) => t.id === id)!;
 }
 
 export const QUESTION = "¿Qué nos impulsa a seguir evolucionando juntos?";

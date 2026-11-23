@@ -1,5 +1,5 @@
 import { appendAnswerToSheet } from "@/lib/google";
-import { MAX_ANSWER_LENGTH, isTeamId, teamLabel } from "@/lib/teams";
+import { MAX_ANSWER_LENGTH, getTeam, isTeamId } from "@/lib/teams";
 
 /** POST JSON: { team: TeamId, answer: string } */
 export async function POST(request: Request) {
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await appendAnswerToSheet({ team: teamLabel(team), answer });
+    await appendAnswerToSheet({ team: getTeam(team).label, answer });
     return Response.json({ ok: true });
   } catch (err) {
     console.error("Error escribiendo en Sheets", err);

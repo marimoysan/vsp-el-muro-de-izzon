@@ -1,0 +1,40 @@
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-beige);
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #333;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Acción completada: píldora con borde beige y check, en vez de relleno. */
+.done {
+  background: transparent;
+  color: var(--color-beige);
+  box-shadow: inset 0 0 0 1.5px var(--color-beige);
+}
+
+.check {
+  margin-right: 6px;
+}
+
+.inactive {
+  opacity: 0.4;
+  cursor: default;
+}

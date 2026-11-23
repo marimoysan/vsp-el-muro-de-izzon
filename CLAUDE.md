@@ -26,28 +26,38 @@ npm run dev     # desarrollo en localhost:3000
 npm run build   # build de producción (lo mismo que hace Vercel)
 npm run lint
 npx tsc --noEmit
-npm run test:e2e                                  # prueba real contra Drive/Sheets (local)
+npm run test:e2e                                  # sube una foto real a Drive vía localhost:3000
 npm run test:e2e -- https://<app>.vercel.app foto.jpg   # contra producción
 ```
 
-Comando de Claude `/check` ejecuta tipos + lint + build.
+Comando de Claude `/check` ejecuta tipos + lint + build. Con `npm run dev` arrancado, los errores del servidor quedan en `.next/dev/logs/next-development.log` (útil para diagnosticar sin ver la terminal de Marina).
+
+## Estado actual (23-nov-2026)
+
+- ✅ Flujo con equipo: `/` "¿Qué equipo sois?" → `/equipo` (rejilla de 30 equipos: NEGRO, BLANCO, BEIGE) → `/equipo/<icono>-<color>` (acciones) → `/equipo/<id>/foto`. Las fotos se guardan como `<icono>-<color>_<timestamp>.jpg`.
+- ✅ Acción completada: se recuerda en `localStorage` del móvil (`lib/progress.ts`) y el botón pasa a "✓ Foto enviada" (borde beige). Es por dispositivo.
+- ⏳ Despliegue en Vercel: repo en GitHub (`marimoysan/vsp-el-muro-de-izzon`), Marina está creando el proyecto en Vercel con `APPS_SCRIPT_URL` y `APPS_SCRIPT_SECRET`. Siguiente paso: probar desde el móvil.
+- ⏸️ Respuesta a la pregunta / Google Sheets: **aparcado a petición de Marina**. El botón "Responde a la pregunta" está inactivo; `/api/answer` existe pero no se usa ni se ha probado.
 
 ## Estructura
 
 ```
 src/
   app/
-    page.tsx              Pantalla de inicio: "Sube tu foto" / "Responde a la pregunta"
-    foto/page.tsx         Flujo de subida de foto (pendiente)
-    pregunta/page.tsx     Flujo de respuesta (pendiente)
-    api/photo/route.ts    POST multipart {team, photo} → Drive
-    api/answer/route.ts   POST JSON {team, answer} → Sheets
+    page.tsx              Entrada desde el QR: "¿Qué equipo sois?"
+    equipo/page.tsx       Selector de equipo (30 iconos en 3 secciones de color)
+    equipo/[team]/page.tsx          Acciones del equipo: "Sube tu foto" / "Responde a la pregunta" (inactivo)
+    equipo/[team]/ActionButtons.tsx Cliente: marca como hechas las acciones completadas
+    equipo/[team]/foto/PhotoUploader.tsx  Cliente: elegir de galería → vista previa → compressImage → POST /api/photo
+    api/photo/route.ts    POST multipart {photo, team} → Drive
+    api/answer/route.ts   POST JSON {team, answer} → Sheets (sin usar todavía)
   components/Screen.tsx   Marco común: cabecera Evoluzzión + contenido + logo IZZON Lab
   lib/google.ts           Llama a Apps Script para Drive/Sheets (server-only)
-  lib/teams.ts            Lista de equipos/iconos, texto de la pregunta, límite de caracteres
+  lib/teams.ts            30 equipos (10 iconos × negro/blanco/beige), texto de la pregunta, límite
+  lib/progress.ts         Acciones completadas por equipo (localStorage)
   lib/image.ts            Compresión de fotos en el navegador antes de subir
 apps-script/Code.gs       Copia versionada del Apps Script (lo que se ejecuta es lo pegado en script.google.com)
-scripts/e2e.sh            Prueba end-to-end de las rutas API
+scripts/e2e.sh            Prueba rápida de /api/photo con curl (no sustituye a probar en el móvil)
 public/brand/             Logos (Evoluzzión Annual Meeting 2026, IZZON Lab)
 public/icons/             Iconografía: <icono>-<negro|blanco|beige>.png
 raw-assets/               Originales de diseño (.ai, .jpg, .svg). Solo en local, NO se versiona (.gitignore)
@@ -70,15 +80,29 @@ Tokens en `src/app/globals.css`: negro `#000`, beige `#c6c3b7` (botones tipo pí
 
 - **Secretos solo en servidor.** `APPS_SCRIPT_URL` y `APPS_SCRIPT_SECRET` nunca con prefijo `NEXT_PUBLIC_`, y no importes `lib/google.ts` desde un componente cliente (lleva `import "server-only"`). Valores reales en `.env.local` (ignorado por git) y en Vercel. IDs de carpeta/hoja y el secreto viven en las *Propiedades del script*, no en el código.
 - **Apps Script:** responde siempre HTTP 200 con `{ok, error}`; `lib/google.ts` convierte `ok:false` en excepción. Si cambias `apps-script/Code.gs`, hay que pegarlo en script.google.com y publicar una **nueva versión del despliegue existente** (si se crea un despliegue nuevo, cambia la URL).
-- **Límite de 4,5 MB por petición en Vercel:** las fotos se comprimen en el cliente (`compressImage`: 3000 px, calidad adaptativa ≤3,8 MB, ~270 ppp para el A4) antes de enviarlas; la ruta rechaza >4 MB. Vercel → Apps Script va en base64 (+33 %), sin problema.
+- **Límite de 4,5 MB por petición en Vercel:** las fotos se comprimen en el cliente (`compressImage`: hasta 4032 px —nunca menos de 3508 px, 300 ppp en A4, si el original lo permite—, la calidad JPEG más alta que quepa en ~4 MB, sin EXIF) antes de enviarlas; la ruta rechaza >4 MB. Vercel → Apps Script va en base64 (+33 %), sin problema.
 - **Sheets:** `asText()` en el script antepone `'` a textos que empiezan por `= + - @` para que no se interpreten como fórmulas.
 - Las fotos se imprimen después en A4, una por equipo, en una plantilla con hueco panorámico (~2:1).
 - Validar siempre en servidor el equipo (`isTeamId`) y la longitud de la respuesta, no fiarse del cliente.
 - No guardar datos personales de los participantes: solo nombre de equipo, respuesta y foto.
 
+## Configuración de Apps Script (lecciones del primer montaje)
+
+- **Código** = pegar `apps-script/Code.gs` tal cual. `getProperty("SECRET")` es el *nombre* de la propiedad: nunca sustituirlo por el valor.
+- **Propiedades del script** (⚙️ Configuración del proyecto): `SECRET`, `FOLDER_ID` (y `SHEET_ID`, `SHEET_NAME` cuando se active Sheets). Hay que pulsar *Guardar propiedades del script*. Se leen en cada llamada: cambiarlas no requiere reimplementar.
+- **Implementación**: aplicación web, *Ejecutar como: Yo*, *Acceso: Cualquier usuario*. Cambiar el código sí requiere *Gestionar implementaciones → ✏️ → Versión nueva*.
+- **URL**: debe ser `https://script.google.com/macros/s/<id>/exec`. La forma de Workspace `/a/macros/<dominio>/s/...` exige login y da 403. Prueba rápida: abrirla en incógnito debe mostrar "Función de script no encontrada: doGet".
+- **Secreto**: copiar/pegar a mano lo corrompió varias veces. Usar `openssl rand -hex 32 | pbcopy` y pegar en ambos sitios; para Vercel, `grep '^APPS_SCRIPT_SECRET=' .env.local | cut -d= -f2- | tr -d '"\n' | pbcopy`.
+- **Diagnóstico** (mensajes en el log de `/api/photo`):
+  - `Falta la variable de entorno …` → no existe `.env.local` o el nombre no coincide (en Vercel: redeploy tras añadir variables).
+  - `Respuesta no JSON (HTTP 403)` → acceso no público o URL `/a/macros/…`.
+  - `unauthorized (recibida: N, esperada: M | sin propiedad SECRET)` → secreto distinto o propiedad no guardada / en otro proyecto.
+- `.env.example` es solo plantilla con valores ficticios; antes de commitearlo, comprobar que no contiene la URL real del script.
+
 ## Pendiente / por decidir
 
-- Lista definitiva de equipos: ¿son los 10 iconos, o 20 (10 iconos × negro/blanco)? ¿Qué nombre se escribe en la hoja?
-- Orden exacto del flujo (¿se elige equipo antes o después de la foto/respuesta?) y uso de la variante beige (¿estado seleccionado?).
+- ¿Qué nombre de equipo se escribe en la hoja? Ahora sería "Hoja Negro", etc.
 - Sustituir `public/brand/evoluzzion-annual-meeting-2026.svg` por la versión con texto convertido a contornos que entregará Marina (la actual pesa ~3,7 MB y usa texto vivo).
-- Pantallas de confirmación / error tras enviar.
+- Pantallas de confirmación / error definitivas (ahora hay un "¡Foto recibida!" y un texto de error básicos).
+- Avisar en la pantalla de subida de que la foto sea horizontal (la plantilla A4 tiene hueco ~2:1).
+- `.env.example` local tiene la URL real del script sin commitear: restaurar con `git checkout -- .env.example`.
