@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { noteSaved } from "./status";
 import type { TeamId } from "./teams";
 
 /**
@@ -20,6 +21,7 @@ export function markDone(team: TeamId, action: Action) {
     // Navegación privada o almacenamiento bloqueado: no pasa nada.
   }
   window.dispatchEvent(new Event(EVENT));
+  noteSaved(team, action === "foto" ? "photo" : "answer");
 }
 
 function isDone(team: TeamId, action: Action) {
