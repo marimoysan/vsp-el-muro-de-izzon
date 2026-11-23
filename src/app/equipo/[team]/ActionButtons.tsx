@@ -10,21 +10,13 @@ import styles from "./page.module.css";
 
 /**
  * Acciones del equipo. Lo que está hecho sale de Drive (foto) y Sheets
- * (respuesta); si no se puede consultar, se usa lo recordado en este móvil.
+ * (respuesta). Mientras llega esa consulta, o si falla, se usa lo recordado
+ * en este móvil, sin pantalla de espera.
  */
 export function ActionButtons({ team }: { team: TeamId }) {
   const status = useTeamStatus();
   const localPhoto = useDone(team, "foto");
   const localAnswer = useDone(team, "pregunta");
-
-  if (status.state === "loading") {
-    return (
-      <>
-        <BackLink href="/equipo" />
-        <p className={styles.loading}>Cargando…</p>
-      </>
-    );
-  }
 
   const photoDone = status.state === "ok" ? status.photo.has(team) : localPhoto;
   const answerDone =
