@@ -1,7 +1,7 @@
 /**
  * Equipos del evento: 30 = 10 iconos × 3 colores (negro, blanco, beige).
  * Cada equipo se identifica como "<icono>-<color>", p. ej. "hoja-negro",
- * que coincide con su imagen en public/icons/<icono>-<color>.png.
+ * que coincide con su imagen en public/icons/<icono>-<color>.webp.
  */
 export const ICONS = [
   { id: "hoja", label: "Hoja" },
@@ -33,7 +33,7 @@ export const TEAMS: Team[] = COLORS.flatMap((c) =>
     id: `${i.id}-${c.id}` as TeamId,
     label: `${i.label} ${c.label}`,
     color: c.id,
-    icon: `/icons/${i.id}-${c.id}.png`,
+    icon: `/icons/${i.id}-${c.id}.webp`,
   })),
 );
 

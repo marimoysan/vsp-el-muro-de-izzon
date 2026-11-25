@@ -18,7 +18,7 @@ Es una app de un solo evento: prioriza que sea sencilla, rápida en móvil y fia
 - Drive y Sheets vía una **aplicación web de Google Apps Script** (`apps-script/Code.gs`) que se ejecuta con la cuenta de Google de la organizadora. Las rutas API de Vercel la llaman desde el servidor con un secreto compartido. Sin Google Cloud, sin service account, sin `googleapis`.
 
 ```
-Móvil → Vercel /api/photo | /api/answer → Apps Script (doPost) → Drive / Sheets
+Móvil → Vercel /api/photo | /api/answer | /api/status → Apps Script (doPost) → Drive / Sheets
 ```
 
 ```bash
@@ -32,17 +32,18 @@ npm run test:e2e -- https://<app>.vercel.app foto.jpg   # contra producción
 
 Comando de Claude `/check` ejecuta tipos + lint + build. Con `npm run dev` arrancado, los errores del servidor quedan en `.next/dev/logs/next-development.log` (útil para diagnosticar sin ver la terminal de Marina).
 
-## Estado actual (23-nov-2026)
+## Estado actual (25-nov-2026)
 
 - ✅ Desplegado en Vercel (`vsp-el-muro-de-izzon.vercel.app`, push a `main` = producción) y foto probada desde el móvil.
 - ✅ Flujo: `/` "¿Qué equipo sois?" → `/equipo` (30 equipos en NEGRO, BLANCO, BEIGE) → `/equipo/<icono>-<color>` (acciones) → `/equipo/<id>/foto` o `/equipo/<id>/pregunta`. Tras completar una acción vuelve a la pantalla del equipo.
 - ✅ Fotos: se guardan en Drive con el nombre del equipo, p. ej. `Hoja Negro.jpg` (si sube otra, Drive guarda dos con el mismo nombre). `compressImage` reintenta y usa `<img>` como alternativa si Android falla al descodificar ("The source image could not be decoded", visto en real); si todo falla, sugiere usar el móvil de otro compañero/a.
-- ✅ Acción completada: se decide con **Drive y Sheets** (`/api/status` → acción `status` del Apps Script): foto hecha si hay un archivo `<Equipo>.<ext>` en la carpeta; respuesta hecha si hay una fila con el equipo en la columna A y texto en la B. El botón pasa a "✓ Foto enviada" / "✓ Respuesta enviada" (borde beige). Con las dos: pantalla "¡Completado! Podéis seguir disfrutando del Coffee Break" (sin flecha atrás) y el equipo sale en gris en el selector (sigue pulsable). La consulta (~3 s) se lanza ya en la landing (`PrefetchStatus`) y se guarda en memoria (`lib/status.ts`): selector y pantalla del equipo la muestran al instante y la refrescan en segundo plano; tras enviar, `markDone` la actualiza sin esperar a Google. Mientras no hay datos o si la consulta falla, la pantalla del equipo usa `localStorage` (`lib/progress.ts`), sin pantalla de espera, y el selector muestra todos activos. Borrar foto/fila en Google reactiva el equipo. Reenviar crea otra fila / otra foto.
+- ✅ Acción completada: se decide con **Drive y Sheets** (`/api/status` → acción `status` del Apps Script): foto hecha si hay un archivo `<Equipo>.<ext>` en la carpeta; respuesta hecha si hay una fila con el equipo en la columna A y texto en la B. El botón pasa a "✓ Foto enviada" / "✓ Respuesta enviada" (borde beige). Con las dos: pantalla "¡Completado! Podéis seguir disfrutando del Coffee Break" (sin flecha atrás) y el equipo sale en gris en el selector (no pulsable). La consulta (~3 s) se lanza ya en la landing (`PrefetchStatus`) y se guarda en memoria (`lib/status.ts`): selector y pantalla del equipo la muestran al instante y la refrescan en segundo plano; tras enviar, `markDone` la actualiza sin esperar a Google. Mientras no hay datos o si la consulta falla, la pantalla del equipo usa `localStorage` (`lib/progress.ts`), sin pantalla de espera, y el selector muestra todos activos. Borrar foto/fila en Google reactiva el equipo. Reenviar crea otra fila / otra foto.
 - ✅ Acción `status` publicada en Apps Script (23-nov); `/api/status` probado en local (~3 s). Falta probar el gris/completado en el móvil.
 - ✅ Navegación: flecha ‹ arriba a la izquierda (`BackLink` en `Screen.tsx`, prop `back`) en vez de enlaces "Volver". No hay flecha en `/` ni en la pantalla de completado.
 - 🧪 Pregunta: 50–250 caracteres con contador → `/api/answer` → Sheets, fila `Equipo | Respuesta | Fecha y hora`. Pendiente de probar con la hoja real (requiere `SHEET_ID`/`SHEET_NAME` en Propiedades del script y nueva versión del Apps Script con la columna de fecha).
-- 🎨 Cabecera grande (`Screen` sin `compact`, en `/`, pantalla del equipo y foto) al 160 % del ancho para que "EVOLUZZIÓN" ocupe ~3/4 de la pantalla como en el diseño (el SVG tiene mucho margen). Compacta en selector y pregunta.
-- 🎨 Cabecera SVG: le quitamos el logo IZZON LAB y una copia del diseño que había fuera del lienzo (3,7 → 1,9 MB). Los textos pequeños siguen sin contornos (salen en Times) y queda hueco negro donde estaba el logo.
+- 🎨 Cabecera grande (`Screen` sin `compact`, en `/`, pantalla del equipo y foto) al 160 % del ancho para que "EVOLUZZIÓN" ocupe ~3/4 de la pantalla como en el diseño (la imagen tiene mucho margen). Compacta en selector y pregunta.
+- ⚡ Iconos en WebP 264 px (779 → 227 KB los 30), `unoptimized` (sin optimizador de Vercel), carga inmediata en el selector y precargados desde `/` (`PrefetchStatus`).
+- 🎨 Cabecera: `public/brand/evoluzzion-annual-meeting-2026.png` (135 KB), sacada del PNG que mandó la diseñadora el 25-nov (`raw-assets/Attachments-Fwd_ …/LOGO_AANUAL_MEETING_2026_p01.png`, 1501 px, textos ya en Montserrat). Recortada sin el logo IZZON LAB de abajo ni el filo transparente, con fundido al negro en los últimos 120 px. Sustituye al SVG antiguo (1,9 MB, textos en Times). Si llega una versión al doble de resolución, se recorta igual.
 
 ## Estructura
 
@@ -68,7 +69,7 @@ src/
 apps-script/Code.gs       Copia versionada del Apps Script (lo que se ejecuta es lo pegado en script.google.com)
 scripts/e2e.sh            Prueba rápida de /api/photo con curl (no sustituye a probar en el móvil)
 public/brand/             Logos (Evoluzzión Annual Meeting 2026, IZZON Lab)
-public/icons/             Iconografía: <icono>-<negro|blanco|beige>.png
+public/icons/             Iconografía: <icono>-<negro|blanco|beige>.webp (264 px, ~7 KB)
 raw-assets/               Originales de diseño (.ai, .jpg, .svg). Solo en local, NO se versiona (.gitignore)
 ```
 
@@ -79,7 +80,7 @@ raw-assets/               Originales de diseño (.ai, .jpg, .svg). Solo en local
 Orden real del recorrido: 3 → 4-5 → 1 → (foto | 2).
 
 1. **Acciones del equipo** (`/equipo/<id>`): cabecera grande + "SUBE TU FOTO" y "RESPONDE A LA PREGUNTA". Añadido: icono y nombre del equipo arriba (enlace para cambiar de equipo).
-2. **Pregunta**: cabecera compacta, pregunta en mayúsculas y textarea gris oscuro. Añadido: contador, botón "Enviar" y "Volver".
+2. **Pregunta**: cabecera compacta, pregunta en mayúsculas y textarea gris oscuro. Añadido: contador, botón "Enviar" y flecha ‹ atrás.
 3. **¿Qué equipo sois?** (`/`, entrada desde el QR): botón que abre el selector.
 4-5. **Selector de equipo**: rejilla de 3 columnas con iconos circulares (hoja, tubo, molécula, gota, matraz, frasco, engranaje, camión, cuentagotas, ZZ) en secciones **NEGRO**, **BLANCO** y **BEIGE** (el diseño solo muestra dos; hay 30 equipos), con scroll. Los iconos negros llevan un aro gris sutil para distinguirse del fondo.
 
@@ -114,8 +115,6 @@ Tokens en `src/app/globals.css`: fondo `#060606`, beige `#c6c3b7` (botones tipo 
 
 - ¿Qué nombre de equipo se escribe en la hoja? Ahora sería "Hoja Negro", etc.
 - Probar en el móvil el gris del selector y la pantalla de completado.
-- Cabecera SVG: pasar los textos pequeños a contornos (lo hace la diseñadora del cliente o lo intentamos con Montserrat) y recortar el hueco negro de abajo. Al cambiarla, revisar el 160 % / -30 % de `.header img` en `Screen.module.css`. Original sin tocar: `raw-assets/LOGO_AANUAL_MEETING_2026_p01.svg`.
-- Iconos más rápidos (propuesto, sin hacer): pasarlos a WebP ~264 px sin optimizador de Vercel, carga inmediata (no lazy) y precarga desde `/`. Los PNG actuales son 710 px.
 - Probar la pregunta end-to-end en el móvil con la hoja real.
 - Avisar en la pantalla de subida de que la foto sea horizontal (la plantilla A4 tiene hueco ~2:1).
 - `.env.example` local tiene la URL real del script sin commitear: restaurar con `git checkout -- .env.example`.

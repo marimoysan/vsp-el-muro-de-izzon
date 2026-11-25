@@ -2,9 +2,16 @@
 
 import { useEffect } from "react";
 import { prefetchTeamStatus } from "@/lib/status";
+import { TEAMS } from "@/lib/teams";
 
-/** Empieza a consultar Drive/Sheets mientras el equipo está en la landing. */
+/**
+ * Mientras el equipo está en la landing: empieza a consultar Drive/Sheets y
+ * descarga los 30 iconos (~230 KB) para que el selector salga al instante.
+ */
 export function PrefetchStatus() {
-  useEffect(() => prefetchTeamStatus(), []);
+  useEffect(() => {
+    prefetchTeamStatus();
+    for (const team of TEAMS) new window.Image().src = team.icon;
+  }, []);
   return null;
 }

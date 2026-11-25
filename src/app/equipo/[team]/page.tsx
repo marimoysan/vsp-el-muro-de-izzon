@@ -11,15 +11,31 @@ export function generateStaticParams() {
 }
 
 /** Pantalla 1 del diseño: las dos acciones del equipo elegido. */
-export default async function TeamPage({ params }: { params: Promise<{ team: string }> }) {
+export default async function TeamPage({
+  params,
+}: {
+  params: Promise<{ team: string }>;
+}) {
   const { team: id } = await params;
   if (!isTeamId(id)) notFound();
   const team = getTeam(id);
 
   return (
     <Screen>
-      <Link href="/equipo" className={styles.team} aria-label="Cambiar de equipo">
-        <Image src={team.icon} alt="" width={56} height={56} className={styles.icon} />
+      <Link
+        href="/equipo"
+        className={styles.team}
+        aria-label="Cambiar de equipo"
+      >
+        <Image
+          src={team.icon}
+          alt=""
+          width={56}
+          height={56}
+          className={styles.icon}
+          unoptimized
+          preload
+        />
         <span>{team.label}</span>
       </Link>
       <ActionButtons team={team.id} />

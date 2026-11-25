@@ -22,7 +22,7 @@ export function Screen({
       {back && <BackLink href={back} />}
       <header className={compact ? styles.headerCompact : styles.header}>
         <img
-          src="/brand/evoluzzion-annual-meeting-2026.svg"
+          src="/brand/evoluzzion-annual-meeting-2026.png"
           alt="Annual Meeting 2026 · Evoluzzión · La fuerza de crecer juntos"
         />
       </header>
