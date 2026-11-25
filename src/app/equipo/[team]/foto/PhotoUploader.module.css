@@ -30,3 +30,20 @@
   color: var(--color-beige);
   text-align: center;
 }
+
+/* "Cambiar foto": menos peso que "Enviar" (texto subrayado, sin píldora). */
+.secondary {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  margin-top: -8px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.secondary:disabled {
+  opacity: 0.5;
+}

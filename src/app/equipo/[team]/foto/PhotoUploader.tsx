@@ -65,16 +65,19 @@ export function PhotoUploader({ team }: { team: TeamId }) {
         className={styles.hiddenInput}
       />
 
-      {preview && <img src={preview} alt="Vista previa" className={styles.preview} />}
+      {preview && (
+        <img src={preview} alt="Vista previa" className={styles.preview} />
+      )}
 
-      <button
-        type="button"
-        className={pill.pill}
-        onClick={() => inputRef.current?.click()}
-        disabled={status === "sending"}
-      >
-        {file ? "Cambiar foto" : "Elige tu foto"}
-      </button>
+      {!file && (
+        <button
+          type="button"
+          className={pill.pill}
+          onClick={() => inputRef.current?.click()}
+        >
+          Elige tu foto
+        </button>
+      )}
 
       {file && (
         <p className={styles.note}>
@@ -90,6 +93,18 @@ export function PhotoUploader({ team }: { team: TeamId }) {
           disabled={status === "sending"}
         >
           {status === "sending" ? "Enviando…" : "Enviar"}
+        </button>
+      )}
+
+      {/* Acción secundaria: enlace de texto, por debajo de "Enviar". */}
+      {file && (
+        <button
+          type="button"
+          className={styles.secondary}
+          onClick={() => inputRef.current?.click()}
+          disabled={status === "sending"}
+        >
+          Cambiar foto
         </button>
       )}
 
