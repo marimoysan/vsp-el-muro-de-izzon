@@ -77,6 +77,12 @@ export function PhotoUploader({ team }: { team: TeamId }) {
       </button>
 
       {file && (
+        <p className={styles.note}>
+          Revisad bien la foto: una vez enviada, no se puede cambiar.
+        </p>
+      )}
+
+      {file && (
         <button
           type="button"
           className={pill.pill}

@@ -23,3 +23,10 @@
   font-size: 0.85rem;
   text-align: center;
 }
+
+/* Aviso antes de enviar: no se puede cambiar después. */
+.note {
+  font-size: 0.85rem;
+  color: var(--color-beige);
+  text-align: center;
+}

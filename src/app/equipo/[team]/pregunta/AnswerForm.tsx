@@ -61,6 +61,10 @@ export function AnswerForm({ team }: { team: TeamId }) {
           : `${length} / ${MAX_ANSWER_LENGTH}`}
       </p>
 
+      <p className={styles.note}>
+        Revisad bien la respuesta: una vez enviada, no se puede cambiar.
+      </p>
+
       <button type="submit" className={pill.pill} disabled={tooShort || sending}>
         {sending ? "Enviando…" : "Enviar"}
       </button>
